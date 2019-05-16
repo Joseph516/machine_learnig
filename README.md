@@ -1,10 +1,14 @@
 # Machine Learning
 
+## 进度
+
+1. 《tensorflow实战》学习完第6章。
+2. 学习完lecture5，因考研中断。
+
 # Problems
 
-1. 如何用算法构建神经网络，并成功计算出对应的function？
-2. 补充pca内容
-3. 补充mobilenetv2内容。
+1. 补充pca内容
+2. 补充mobilenetv2内容。
 
 # Linear Regression
 
@@ -108,7 +112,7 @@ $$
 
 参考：<https://blog.csdn.net/jinping_shi/article/details/52433975>
 
-正则化用于加在损失函数后面，可以看作是村是函数的惩罚项。
+正则化用于加在损失函数后面，可以看作是损失函数的惩罚项。
 
 L1正则化可以产生稀疏矩阵，当正则化系数较小时候，可以避免过拟合。
 
@@ -209,6 +213,8 @@ keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=0)
 
 # DNN
 
+![1557362421088](assets/1557362421088.png)
+
 ## 原理
 
 ### 普遍性Universality
@@ -271,6 +277,64 @@ $$
 
       ![1551590193138](assets/1551590193138.png)
 
+## BackPropagation
+
+### Scalar backpropagation
+
+神经网络反向传播，梯度变化符合链式规则。
+
+![1557364344196](assets/1557364344196.png)
+
+![1557416751628](assets/1557416751628.png)
+
+### 向量中的backpropagation
+
+![1557451354765](assets/1557451354765.png)
+
+可以构建Jacobian矩阵进行运算，见dy/dx。
+
+但是对于向量的后向传递而言，Jacobian矩阵是稀疏矩阵。转化成矩阵进行运算会占用极大的空间（上图，对于1xn向量，空间占用为nxn）。在实际计算后向传递时，需要进行implicit计算。即直接用数值乘法代替。见下图。
+
+![1557451314435](assets/1557451314435.png)
+
+### 矩阵中的bachpropagation                                                                                                                                                  
+
+对于矩阵x和w的反向传播，梯度计算公式如下：
+
+同样不需要构建jacobin矩阵，需要大量空间，可以直接用矩阵进行计算。
+
+![1557460572771](assets/1557460572771.png)
+
+Example：
+
+![1557468345936](assets/1557468345936.png)
+
+## ConvNet
+
+### 卷积运算
+
+在神经网络中，可以不需要对卷积核进行翻转。翻转是实现可交换性，而在神经网络中，卷积通常不是单独存在的。卷积与其它运算结合的结果，本身就是不可交换的。
+$$
+(f*g)[n] = \sum_{m=-\infty}^{\infty} f[m]g[n-m] \\
+= \sum_{m=-\infty}^{\infty} f[n-m]g[m]  (可交换性)
+$$
+
+
+![1557710222224](assets/1557710222224.png)
+
+#### 卷积性质
+
+![1557673610141](assets/1557673610141.png)
+
+#### 计算layer参数
+
+1. 先计算每个滤波器的参数（卷积核参数+偏置参数）。如卷积核为5x5x3的参数：5×5×3+1=76
+2. 乘以深度，计算该layer总的参数。
+
+### Pool
+
+![1557674119911](assets/1557674119911.png)
+
 ## MobileNetV2 模型
 
   keras API: https://keras.io/zh/applications/#mobilenetv2
@@ -280,6 +344,134 @@ $$
   实现方式：https://github.com/ShuangXieIrene/mobilenet-v2
 
   知乎：https://zhuanlan.zhihu.com/p/35405071
+
+![1556251083804](assets/1556251083804.png)
+
+核心特点：压缩模型深度，有效分解卷积，减小网络参数。可以有效降低运算量，但是精度下降得较少。
+
+卷积分解是：标准卷积分解成一个深度卷积和一个点卷积（1 × 1卷积核）。**深度卷积将每个卷积核应用到每一个通道，而1 × 1卷积用来组合通道卷积的输出**
+
+https://blog.csdn.net/Jesse_Mx/article/details/70766871
+
+## InceptionV3模型
+
+核心思想：用小卷积替代大卷积。共有46层，11个Inception模块。每个模块的输入经过不同尺寸的卷积filter，最后拼接在一起。
+
+## RNN
+
+特点：一条语句可以被视为RNN的一个输入样本，句子中的字或者词之间是有关系的，后面字词的出现要依赖于前面的字词。
+
+缺点：容易出现反馈消失。
+
+![1556256757673](assets/1556256757673.png)
+
+
+
+## LSTM
+
+参考：<https://colah.github.io/posts/2015-08-Understanding-LSTMs/>
+
+LSTM是为了解决RNN中的反馈消失问题而被提出的模型，它也可以被视为RNN的一个变种。与RNN相比，增加了3个门（gate）：input门，forget门和output门，门的作用就是为了控制之前的隐藏状态、当前的输入等各种信息，确定哪些该丢弃，哪些该保留，如下图所示。
+
+![1556257125979](assets/1556257125979.png)
+
+## GRU
+
+GRU只有两个门reset门r和update门，相比LSTM参数更少，优化运算量。实验证明，性能没有明显的胜者。
+
+![1556257146675](assets/1556257146675.png)
+
+## Activation function
+
+![1557322664783](assets/1557322664783.png)
+
+- sigmoid
+  $$
+  f(z) = \frac{1}{1+e^{-z}}
+  $$
+  特点：取值范围为0-1，适用于二分类。在特征相乘比较复杂或者相差不大时效果好。
+
+  缺点：计算量大，反向传播计算梯度时，涉及除法，且容易出现梯度消失。
+
+  sigmoid及其导数如下：
+
+  ![1557416575216](assets/1557416575216.png)
+
+  ![1556200917787](assets/1556200917787.png)
+
+- tanh
+  $$
+  f(z) = \frac{e^z-e^{-z}}{e^z+e^{-z}} = 2*sigmoid(z)-1
+  $$
+  特点：-1-1之间，均值为0，在特征相差明显时效果较好，在循环过程中会不断扩大区别。实际时候比sigmoid好。
+
+  缺点：计算量大
+
+- ReLu
+  $$
+  f(z) = max(0,x)
+  $$
+  特点：收敛速度快。
+
+  缺点：对于大信号没有限幅，容易出现梯度爆炸。
+
+- softmax
+  $$
+  f(z) = \frac{e^{z_j}}{\sum_{k=1}^K e^{z_k}}
+  $$
+  特点：相当于求子类的概率，适用于多分类问题。
+
+## loss function
+
+- Cross Entropy 交叉熵
+  $$
+  loss = -\sum_x p(x)*log*q(x)
+  $$
+  交叉熵用于计算概率之间的loss，其中p为实际概率，q为预测概率。
+
+- MSE 均方根值
+  $$
+  MSE = \frac{1}{n}\sum_{i=1}^n(y_{pred}-y)^2
+  $$
+  常用于回归问题，计算具体数值之间的loss。
+
+## Optimizer 优化器
+
+知乎参考：https://zhuanlan.zhihu.com/p/32626442
+
+简书参考：<https://www.jianshu.com/p/aebcaf8af76e>
+
+- SGD
+  $$
+  \theta_{n+1} = \theta_n - \frac {\alpha}{\alpha \theta_n}J(\theta_n)
+  $$
+  特点：随机梯度下降，得到部分数据的局部最优解。GD得到所有数据的局部最优解。
+
+  缺点：迭代慢。
+
+- RMSProp
+
+  Geoffrey Hinton教授提出，主要是结合梯度平方的指数的移动平均数调整学习速率。
+
+  在不稳定情况下，仍能收敛，适应性好。
+
+  ![1556203248578](assets/1556203248578.png)
+
+- AdaGrad
+
+  ![1556203414246](assets/1556203414246.png)
+
+  特点：动态改变梯度（学习速率），增加自适应性。
+
+  缺点：主要缺陷来自分母项的对梯度平方不断累积，随之时间步地增加，分母项越来越大，最终导致学习率收缩到太小无法进行有效更新。
+
+- Adam
+
+  结合RMSProp和AdaGrad的优点。能够从梯度均值及梯度平方两个角度进行自适应地调节，而不是直接由当前梯度决定。
+
+  ![1556203828748](assets/1556203828748.png)
+
+## 评估矩阵
 
 # Audio & Speech Recognition
 
@@ -409,3 +601,16 @@ target_link_libraries( DisplayImage ${OpenCV_LIBS} )
 2. TensorFlow 实战Google深度学习框架 第2版 ,郑泽宇
 3. tensorflow-internals
 4. 神经网络可视化交互：http://playground.tensorflow.org
+
+# CS231n
+
+网址： http://cs231n.stanford.edu/
+
+## Loss
+
+![1557240537606](assets/1557240537606.png)
+
+![1557240554694](assets/1557240554694.png)
+
+![1557241051365](assets/1557241051365.png)
+
